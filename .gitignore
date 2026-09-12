@@ -38,6 +38,5 @@ next-env.d.ts
 /outputs/
 /work/
 
-# local hosting identity and temporary launcher
-/.openai/hosting.json
+# local temporary launcher
 /临时打开_*.html

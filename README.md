@@ -102,7 +102,7 @@ python3 scripts/import_workbook.py /absolute/path/to/question-bank.xlsx data/ass
 
 ## 部署说明
 
-本仓库不会提交任何站点 ID、访问令牌或环境变量。使用 OpenAI Sites 时，将 `.openai/hosting.example.json` 复制为 `.openai/hosting.json`；其他平台可根据目标运行时增加适配配置。
+本仓库不会提交任何真实站点 ID、访问令牌或环境变量。`.openai/hosting.json` 保留了可构建的空配置；使用 OpenAI Sites 时，由站点工具在本地写入项目 ID，提交前应恢复为空值。其他平台可根据目标运行时增加适配配置。
 
 部署前请完成 [`OPEN_SOURCE_CHECKLIST.md`](./OPEN_SOURCE_CHECKLIST.md) 中的确认项。仓库准备与远程发布是两个独立步骤。
 
