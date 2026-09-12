@@ -122,7 +122,12 @@ export function ResultsExperience({ assessmentId }: { assessmentId: string }) {
           <div><span className="eyebrow">Portrait from Others</span><h2>邀请一个真正熟悉你的人。</h2><p>对方会独立看到同样的 72 个问题。你们不会看到对方的逐题回答。</p></div>
           <div className="invite-code"><span>邀请码</span><b>{invitation?.code ?? '正在生成'}</b></div>
           <Button size="lg" className="primary-button" disabled={!invitation} onClick={() => void copyInvitation()}>{copied ? <Check /> : <Send />}{copied ? '已复制邀请' : '复制邀请链接'}</Button>
-          {!isCloudPersistenceEnabled && <p className="local-mode-warning">本机私测模式下，邀请需在同一台设备上打开。配置 Supabase 后可跨设备使用。</p>}
+          {!isCloudPersistenceEnabled && invitation && (
+            <>
+              <Button variant="outline" size="lg" onClick={() => router.push(`/observe/${invitation.code}`)}>在本机完成他评</Button>
+              <p className="local-mode-warning">本机私测模式下，请在同一浏览器、同一 `localhost` 地址中完成他评。不要改用另一个浏览器、隐私窗口或设备；配置 Supabase 后才可跨设备使用。</p>
+            </>
+          )}
           <Button variant="ghost" onClick={() => location.reload()}><RefreshCw />看看 TA 是否已完成</Button>
         </section>
       ) : (
