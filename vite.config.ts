@@ -54,12 +54,20 @@ export default defineConfig(async () => {
   const { cloudflare } = await import('@cloudflare/vite-plugin');
 
   return {
+    base: process.env.GITHUB_ACTIONS ? '/student-strength-portrait/' : '/',
+    define: {
+      __APP_BASE_PATH__: JSON.stringify(process.env.GITHUB_ACTIONS ? '/student-strength-portrait' : ''),
+    },
     css: { postcss: { plugins: [tailwindcss()] } },
     server: isCodexSeatbeltSandbox
       ? { watch: { useFsEvents: false, usePolling: true } }
       : undefined,
     plugins: [
-      vinext(),
+      vinext({
+        nextConfig: {
+          output: 'export',
+        },
+      }),
       sites(),
       cloudflare({
         viteEnvironment: { name: 'rsc', childEnvironments: ['ssr'] },

@@ -1,18 +1,19 @@
 'use client';
 
+export const dynamic = 'force-static';
+
 /* oxlint-disable jsx-a11y/label-has-associated-control -- Base UI inputs are nested inside their visible labels. */
 
 import { ArrowRight, LockKeyhole } from 'lucide-react';
-import { useRouter } from 'next/navigation';
 import { type SyntheticEvent, useState } from 'react';
 
 import { SiteHeader } from '@/components/site-header';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { createAssessment, isCloudPersistenceEnabled } from '@/lib/storage';
+import { navigateTo } from '@/lib/navigation';
 
 export default function StartAssessmentPage() {
-  const router = useRouter();
   const [studentAlias, setStudentAlias] = useState('');
   const [grade, setGrade] = useState('');
   const [busy, setBusy] = useState(false);
@@ -24,7 +25,7 @@ export default function StartAssessmentPage() {
     setError('');
     try {
       const assessment = await createAssessment({ studentAlias, grade });
-      router.push(`/assessment/run#${encodeURIComponent(assessment.id)}`);
+      navigateTo(`/assessment/run#${encodeURIComponent(assessment.id)}`);
     } catch {
       setError('暂时没能建立你的画像，请稍后再试。');
       setBusy(false);

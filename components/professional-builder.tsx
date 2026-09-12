@@ -3,7 +3,6 @@
 /* oxlint-disable jsx-a11y/label-has-associated-control -- Base UI controls are nested inside their visible labels. */
 
 import { Check, Clipboard, Download, Save } from 'lucide-react';
-import { useRouter } from 'next/navigation';
 import { useEffect, useMemo, useState } from 'react';
 
 import { SiteHeader } from '@/components/site-header';
@@ -12,6 +11,7 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { compareProfiles } from '@/lib/comparison';
 import { buildExploration } from '@/lib/exploration';
+import { navigateTo } from '@/lib/navigation';
 import {
   buildMarkdown,
   buildProfessionalPrompt,
@@ -43,7 +43,6 @@ function safeJson<T>(value: string, fallback: T): T {
 }
 
 export function ProfessionalBuilder({ assessmentId }: { assessmentId: string }) {
-  const router = useRouter();
   const [context, setContext] = useState<ProfessionalContext>(cloneEmptyContext);
   const [payload, setPayload] = useState<StructuredExport | null>();
   const [status, setStatus] = useState('');
@@ -161,7 +160,7 @@ export function ProfessionalBuilder({ assessmentId }: { assessmentId: string }) 
     return <main className="assessment-loading"><span className="breathing-dot" /><p>正在整理专业解读资料</p></main>;
   }
   if (!payload || !structured) {
-    return <main className="soft-page"><SiteHeader quiet /><section className="start-card"><span className="eyebrow">还不能生成资料包</span><h1>请先完成学生自我画像。</h1><Button onClick={() => router.push(`/results#${encodeURIComponent(assessmentId)}`)}>回到画像</Button></section></main>;
+    return <main className="soft-page"><SiteHeader quiet /><section className="start-card"><span className="eyebrow">还不能生成资料包</span><h1>请先完成学生自我画像。</h1><Button onClick={() => navigateTo(`/results#${encodeURIComponent(assessmentId)}`)}>回到画像</Button></section></main>;
   }
 
   return (

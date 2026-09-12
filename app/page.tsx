@@ -1,20 +1,19 @@
 'use client';
 
 import { ArrowRight, Eye, Layers3, Sparkles } from 'lucide-react';
-import { useRouter } from 'next/navigation';
 import { type SyntheticEvent, useState } from 'react';
 
 import { PortraitMark, SiteHeader } from '@/components/site-header';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { navigateTo } from '@/lib/navigation';
 
 export default function Home() {
-  const router = useRouter();
   const [code, setCode] = useState('');
 
   function openInvitation(event: SyntheticEvent<HTMLFormElement>) {
     event.preventDefault();
-    if (code.trim()) router.push(`/observe/${code.trim().toUpperCase()}`);
+    if (code.trim()) navigateTo(`/observe#${encodeURIComponent(code.trim().toUpperCase())}`);
   }
 
   return (
@@ -26,7 +25,7 @@ export default function Home() {
           <h1>看见自己，<br />也看看别人眼中的你。</h1>
           <p>一份关于兴趣、优势、偏好、价值与能力信心的双视角画像。你完成自己的部分，再邀请一个真正熟悉你的人。</p>
           <div className="hero-actions">
-            <Button size="lg" className="primary-button hero-primary" onClick={() => router.push('/assessment')}>
+            <Button size="lg" className="primary-button hero-primary" onClick={() => navigateTo('/assessment')}>
               开始我的画像 <ArrowRight />
             </Button>
             <form className="invite-entry" onSubmit={openInvitation}>

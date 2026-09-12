@@ -1,5 +1,7 @@
 'use client';
 
+export const dynamic = 'force-static';
+
 import { useEffect, useState } from 'react';
 
 import { ProfessionalBuilder } from '@/components/professional-builder';

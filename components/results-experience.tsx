@@ -7,7 +7,7 @@ import {
   RefreshCw,
   Send,
 } from 'lucide-react';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useSearchParams } from 'next/navigation';
 import { useEffect, useMemo, useState } from 'react';
 
 import { PortraitVisual } from '@/components/portrait-visual';
@@ -16,6 +16,7 @@ import { SiteHeader } from '@/components/site-header';
 import { Button } from '@/components/ui/button';
 import { compareProfiles } from '@/lib/comparison';
 import { buildExploration } from '@/lib/exploration';
+import { appHref, navigateTo } from '@/lib/navigation';
 import { completeAnswerMap, scoreProfile } from '@/lib/scoring';
 import {
   getAssessment,
@@ -37,7 +38,6 @@ function DiscoveryList({
 }
 
 export function ResultsExperience({ assessmentId }: { assessmentId: string }) {
-  const router = useRouter();
   const searchParams = useSearchParams();
   const fromObserver = searchParams.get('from') === 'observer';
   const [assessment, setAssessment] = useState<AssessmentRecord | null>();
@@ -81,7 +81,7 @@ export function ResultsExperience({ assessmentId }: { assessmentId: string }) {
 
   async function copyInvitation() {
     if (!invitation) return;
-    const link = `${window.location.origin}/observe/${invitation.code}`;
+    const link = `${window.location.origin}${appHref(`/observe#${invitation.code}`)}`;
     await navigator.clipboard.writeText(
       `我想邀请你，从你的角度看看我。\n${link}\n邀请码：${invitation.code}`,
     );
@@ -93,11 +93,11 @@ export function ResultsExperience({ assessmentId }: { assessmentId: string }) {
     return <main className="assessment-loading"><span className="breathing-dot" /><p>正在把这些线索放在一起</p></main>;
   }
   if (!assessment || error) {
-    return <main className="soft-page"><SiteHeader quiet /><section className="start-card"><span className="eyebrow">暂时找不到这幅画像</span><h1>{error || '这个链接可能已经失效。'}</h1><Button onClick={() => router.push('/')}>回到首页</Button></section></main>;
+    return <main className="soft-page"><SiteHeader quiet /><section className="start-card"><span className="eyebrow">暂时找不到这幅画像</span><h1>{error || '这个链接可能已经失效。'}</h1><Button onClick={() => navigateTo('/')}>回到首页</Button></section></main>;
   }
   if (!selfProfile) {
     return (
-      <main className="soft-page"><SiteHeader quiet /><section className="start-card"><span className="eyebrow">画像还没完成</span><h1>你已经留下了 {Object.keys(selfAnswers).length} 个回答。可以从上次的位置继续。</h1><Button className="primary-button" onClick={() => router.push(`/assessment/run#${encodeURIComponent(assessmentId)}`)}>继续完成 <ArrowRight /></Button></section></main>
+      <main className="soft-page"><SiteHeader quiet /><section className="start-card"><span className="eyebrow">画像还没完成</span><h1>你已经留下了 {Object.keys(selfAnswers).length} 个回答。可以从上次的位置继续。</h1><Button className="primary-button" onClick={() => navigateTo(`/assessment/run#${encodeURIComponent(assessmentId)}`)}>继续完成 <ArrowRight /></Button></section></main>
     );
   }
 
@@ -124,7 +124,7 @@ export function ResultsExperience({ assessmentId }: { assessmentId: string }) {
           <Button size="lg" className="primary-button" disabled={!invitation} onClick={() => void copyInvitation()}>{copied ? <Check /> : <Send />}{copied ? '已复制邀请' : '复制邀请链接'}</Button>
           {!isCloudPersistenceEnabled && invitation && (
             <>
-              <Button variant="outline" size="lg" onClick={() => router.push(`/observe/${invitation.code}`)}>在本机完成他评</Button>
+              <Button variant="outline" size="lg" onClick={() => navigateTo(`/observe#${encodeURIComponent(invitation.code)}`)}>在本机完成他评</Button>
               <p className="local-mode-warning">本机私测模式下，请在同一浏览器、同一 `localhost` 地址中完成他评。不要改用另一个浏览器、隐私窗口或设备；配置 Supabase 后才可跨设备使用。</p>
             </>
           )}
@@ -159,7 +159,7 @@ export function ResultsExperience({ assessmentId }: { assessmentId: string }) {
 
       <section className="professional-bridge">
         <div><span className="eyebrow">进一步理解这幅画像</span><h2>把测评线索与学业、经历和现实条件放在一起。</h2><p>真正的升学与生涯选择，还需要结合学业、经历、家庭考虑和不断变化的专业与职业世界。</p></div>
-        <Button size="lg" className="primary-button" onClick={() => router.push(`/professional#${encodeURIComponent(assessmentId)}`)}>生成专业解读资料包 <ArrowRight /></Button>
+        <Button size="lg" className="primary-button" onClick={() => navigateTo(`/professional#${encodeURIComponent(assessmentId)}`)}>生成专业解读资料包 <ArrowRight /></Button>
       </section>
       <footer className="results-footer">这是一幅可以随着经验继续变化的画像。</footer>
     </main>

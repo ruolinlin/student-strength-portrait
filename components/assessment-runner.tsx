@@ -2,7 +2,6 @@
 
 import { AnimatePresence, motion } from 'framer-motion';
 import { ArrowLeft, Cloud, HardDrive } from 'lucide-react';
-import { useRouter } from 'next/navigation';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 
 import { Button } from '@/components/ui/button';
@@ -14,6 +13,7 @@ import {
   isCloudPersistenceEnabled,
   saveResponse,
 } from '@/lib/storage';
+import { navigateTo } from '@/lib/navigation';
 import type { ResponseRole } from '@/types/assessment';
 
 const transition = { duration: 0.25, ease: 'easeOut' as const };
@@ -25,7 +25,6 @@ export function AssessmentRunner({
   assessmentId: string;
   perspective: ResponseRole;
 }) {
-  const router = useRouter();
   const progressKey = `strength-portrait-progress:${assessmentId}:${perspective}`;
   const [answers, setAnswers] = useState<Record<string, number>>({});
   const [index, setIndex] = useState(0);
@@ -95,7 +94,7 @@ export function AssessmentRunner({
           await completeAssessmentRole(assessmentId, perspective);
           localStorage.removeItem(progressKey);
           const observerQuery = perspective === 'observer' ? '?from=observer' : '';
-          router.push(`/results${observerQuery}#${encodeURIComponent(assessmentId)}`);
+          navigateTo(`/results${observerQuery}#${encodeURIComponent(assessmentId)}`);
           return;
         }
         const nextIndex = index + 1;
@@ -107,7 +106,7 @@ export function AssessmentRunner({
       } finally {
         setSaving(false);
       }
-    }, [assessmentId, currentItem, index, perspective, progressKey, router, saving, showIntro, startedAt],
+    }, [assessmentId, currentItem, index, perspective, progressKey, saving, showIntro, startedAt],
   );
 
   useEffect(() => {

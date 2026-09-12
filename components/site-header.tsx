@@ -1,4 +1,4 @@
-import Link from 'next/link';
+import { appHref } from '@/lib/navigation';
 
 export function PortraitMark({ small = false }: { small?: boolean }) {
   return (
@@ -16,10 +16,10 @@ export function PortraitMark({ small = false }: { small?: boolean }) {
 export function SiteHeader({ quiet = false }: { quiet?: boolean }) {
   return (
     <header className={`site-header ${quiet ? 'site-header--quiet' : ''}`}>
-      <Link href="/" className="brand" aria-label="学生发展优势测评首页">
+      <a href={appHref('/')} className="brand" aria-label="学生发展优势测评首页">
         <PortraitMark small />
         <span>学生发展优势测评</span>
-      </Link>
+      </a>
       {!quiet && <span className="brand-note">Development Strength Portrait</span>}
     </header>
   );
