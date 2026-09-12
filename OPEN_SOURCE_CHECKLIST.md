@@ -18,7 +18,7 @@
 
 - [x] README、许可证、贡献指南、安全政策和变更记录已准备。
 - [x] Issue / PR 模板与 CI 工作流已准备。
-- [ ] 确认 GitHub 仓库名称、所有者账号和公开可见性。
+- [x] GitHub 仓库已创建：`ruolinlin/student-strength-portrait`（公开）。
 - [ ] 确认是否启用 Discussions、Private vulnerability reporting 和分支保护。
 
 ## 发布验收
