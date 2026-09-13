@@ -29,6 +29,11 @@ export interface AssessmentRecord {
   self_completed_at?: string | null;
   observer_completed_at?: string | null;
   assessment_version: string;
+  student_status?: 'not_started' | 'in_progress' | 'completed';
+  parent_status?: 'not_started' | 'in_progress' | 'completed';
+  basic_info_status?: 'not_started' | 'in_progress' | 'completed';
+  guidance_status?: 'not_ready' | 'ready_for_counselor' | 'in_review' | 'released';
+  is_test?: boolean;
 }
 
 export interface ResponseRecord {

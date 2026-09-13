@@ -57,6 +57,7 @@ export default defineConfig(async () => {
     base: process.env.GITHUB_ACTIONS ? '/student-strength-portrait/' : '/',
     define: {
       __APP_BASE_PATH__: JSON.stringify(process.env.GITHUB_ACTIONS ? '/student-strength-portrait' : ''),
+      __TEST_MODE_ENABLED__: JSON.stringify(process.env.ENABLE_TEST_MODE === 'true'),
     },
     css: { postcss: { plugins: [tailwindcss()] } },
     server: isCodexSeatbeltSandbox

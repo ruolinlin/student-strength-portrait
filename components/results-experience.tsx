@@ -4,8 +4,6 @@ import {
   ArrowRight,
   Check,
   MessageCircleQuestion,
-  RefreshCw,
-  Send,
 } from 'lucide-react';
 import { useSearchParams } from 'next/navigation';
 import { useEffect, useMemo, useState } from 'react';
@@ -16,15 +14,13 @@ import { SiteHeader } from '@/components/site-header';
 import { Button } from '@/components/ui/button';
 import { compareProfiles } from '@/lib/comparison';
 import { buildExploration } from '@/lib/exploration';
-import { appHref, navigateTo } from '@/lib/navigation';
+import { navigateTo } from '@/lib/navigation';
 import { completeAnswerMap, scoreProfile } from '@/lib/scoring';
 import {
   getAssessment,
-  getOrCreateInvitation,
   getResponses,
-  isCloudPersistenceEnabled,
 } from '@/lib/storage';
-import type { AssessmentRecord, InvitationRecord } from '@/types/assessment';
+import type { AssessmentRecord } from '@/types/assessment';
 
 function DiscoveryList({
   entries,
@@ -43,8 +39,6 @@ export function ResultsExperience({ assessmentId }: { assessmentId: string }) {
   const [assessment, setAssessment] = useState<AssessmentRecord | null>();
   const [selfAnswers, setSelfAnswers] = useState<Record<string, number>>({});
   const [observerAnswers, setObserverAnswers] = useState<Record<string, number>>({});
-  const [invitation, setInvitation] = useState<InvitationRecord | null>(null);
-  const [copied, setCopied] = useState(false);
   const [error, setError] = useState('');
 
   useEffect(() => {
@@ -57,7 +51,6 @@ export function ResultsExperience({ assessmentId }: { assessmentId: string }) {
         setAssessment(record);
         setSelfAnswers(completeAnswerMap(self));
         setObserverAnswers(completeAnswerMap(observer));
-        if (self.length === 72) setInvitation(await getOrCreateInvitation(assessmentId));
       })
       .catch(() => setError('还没能读取这幅画像，请稍后再试。'));
   }, [assessmentId]);
@@ -78,16 +71,6 @@ export function ResultsExperience({ assessmentId }: { assessmentId: string }) {
     () => (selfProfile ? buildExploration(selfProfile) : []),
     [selfProfile],
   );
-
-  async function copyInvitation() {
-    if (!invitation) return;
-    const link = `${window.location.origin}${appHref(`/observe#${invitation.code}`)}`;
-    await navigator.clipboard.writeText(
-      `我想邀请你，从你的角度看看我。\n${link}\n邀请码：${invitation.code}`,
-    );
-    setCopied(true);
-    setTimeout(() => setCopied(false), 1800);
-  }
 
   if (assessment === undefined) {
     return <main className="assessment-loading"><span className="breathing-dot" /><p>正在把这些线索放在一起</p></main>;
@@ -118,27 +101,30 @@ export function ResultsExperience({ assessmentId }: { assessmentId: string }) {
       <details className="details-drawer"><summary>看看画像里更细的线索 <ArrowRight /></summary><ProfileDetails profile={selfProfile} /></details>
 
       {!observerProfile ? (
-        <section className="invitation-card">
-          <div><span className="eyebrow">Portrait from Others</span><h2>邀请一个真正熟悉你的人。</h2><p>对方会独立看到同样的 72 个问题。你们不会看到对方的逐题回答。</p></div>
-          <div className="invite-code"><span>邀请码</span><b>{invitation?.code ?? '正在生成'}</b></div>
-          <Button size="lg" className="primary-button" disabled={!invitation} onClick={() => void copyInvitation()}>{copied ? <Check /> : <Send />}{copied ? '已复制邀请' : '复制邀请链接'}</Button>
-          {!isCloudPersistenceEnabled && invitation && (
-            <>
-              <Button variant="outline" size="lg" onClick={() => navigateTo(`/observe#${encodeURIComponent(invitation.code)}`)}>在本机完成他评</Button>
-              <p className="local-mode-warning">本机私测模式下，请在同一浏览器、同一 `localhost` 地址中完成他评。不要改用另一个浏览器、隐私窗口或设备；配置 Supabase 后才可跨设备使用。</p>
-            </>
-          )}
-          <Button variant="ghost" onClick={() => location.reload()}><RefreshCw />看看 TA 是否已完成</Button>
+        <section className="results-status-card results-status-card--pending">
+          <span className="eyebrow">家长测评</span>
+          <h2>{assessment.parent_status === 'in_progress' ? '家长正在填写。' : '家长测评尚未完成。'}</h2>
+          <p>{assessment.parent_status === 'in_progress' ? '完成后，双视角发展优势对比会在这里准备好。' : '家长入口已在本次测评页面，可从那里查看状态并邀请家长完成。'}</p>
+          <Button variant="outline" onClick={() => navigateTo(`/session#${assessment.id}`)}>查看测评状态 <ArrowRight /></Button>
         </section>
       ) : (
         <>
+          <section className="results-status-card results-status-card--complete">
+            <span className="eyebrow">已完成</span>
+            <h2>你的发展优势报告和双视角报告已经准备好了。</h2>
+            <p>上方是你的发展优势报告；继续向下，即可查看你和家长的双视角对比。</p>
+            <div className="results-status-card__actions">
+              <Button variant="outline" onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}>查看我的发展优势报告 <ArrowRight /></Button>
+              <Button className="primary-button" onClick={() => document.getElementById('dual-perspective-report')?.scrollIntoView({ behavior: 'smooth' })}>查看双视角报告 <ArrowRight /></Button>
+            </div>
+          </section>
           <section className="portrait-reveal portrait-reveal--other">
             <div className="portrait-reveal__copy"><span className="eyebrow">Portrait from Others</span><h2>这是你眼中的我。</h2><p>这幅画像来自长期相处中真实被看见的部分。它和自我画像一样重要，但并不替代自我画像。</p></div>
             <PortraitVisual self={observerProfile} />
           </section>
           <details className="details-drawer"><summary>看看 TA 眼中更细的线索 <ArrowRight /></summary><ProfileDetails profile={observerProfile} /></details>
 
-          <section className="shared-portrait">
+          <section className="shared-portrait" id="dual-perspective-report">
             <div className="shared-heading"><span className="eyebrow">What we see together</span><h2>我们一起看见的你。</h2><p>这不是一次“答对了多少”的比较。同样的地方让我们看见稳定的线索，不同的地方让我们有机会问出更好的问题。</p></div>
             <PortraitVisual self={selfProfile} observer={observerProfile} />
             <div className="discovery-grid">
@@ -161,7 +147,6 @@ export function ResultsExperience({ assessmentId }: { assessmentId: string }) {
         <div><span className="eyebrow">进一步理解这幅画像</span><h2>把测评线索与学业、经历和现实条件放在一起。</h2><p>真正的升学与生涯选择，还需要结合学业、经历、家庭考虑和不断变化的专业与职业世界。</p></div>
         <Button size="lg" className="primary-button" onClick={() => navigateTo(`/professional#${encodeURIComponent(assessmentId)}`)}>生成专业解读资料包 <ArrowRight /></Button>
       </section>
-      <footer className="results-footer">这是一幅可以随着经验继续变化的画像。</footer>
     </main>
   );
 }

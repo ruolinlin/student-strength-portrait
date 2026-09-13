@@ -7,10 +7,11 @@ import type {
   ResponseRole,
 } from '@/types/assessment';
 import type { ProfessionalBriefRecord } from '@/types/professional';
+import { isTestModeEnabled, mockAnswers, requireTestMode, type TestPreset } from '@/lib/test-mode';
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL?.replace(/\/$/, '');
 const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-export const isCloudPersistenceEnabled = Boolean(supabaseUrl && supabaseKey);
+export const isCloudPersistenceEnabled = Boolean(supabaseUrl && supabaseKey) && !isTestModeEnabled;
 
 const headers = {
   apikey: supabaseKey ?? '',
@@ -77,6 +78,11 @@ export async function createAssessment(input: {
     grade: input.grade || null,
     status: 'self_in_progress',
     assessment_version: '0.2',
+    student_status: 'not_started',
+    parent_status: 'not_started',
+    basic_info_status: 'not_started',
+    guidance_status: 'not_ready',
+    is_test: isTestModeEnabled,
   };
   if (isCloudPersistenceEnabled) {
     const [created] = await rest<AssessmentRecord[]>('assessments', {
@@ -84,11 +90,13 @@ export async function createAssessment(input: {
       headers: { Prefer: 'return=representation' },
       body: JSON.stringify(record),
     });
+    await getOrCreateInvitation(created.id);
     return created;
   }
   const database = readLocal();
   database.assessments.push(record);
   writeLocal(database);
+  await getOrCreateInvitation(record.id);
   return record;
 }
 
@@ -147,8 +155,8 @@ export async function completeAssessmentRole(
   const completedAt = new Date().toISOString();
   const patch =
     role === 'self'
-      ? { status: 'awaiting_observer', self_completed_at: completedAt }
-      : { status: 'complete', observer_completed_at: completedAt };
+      ? { status: 'awaiting_observer', self_completed_at: completedAt, student_status: 'completed' }
+      : { status: 'complete', observer_completed_at: completedAt, parent_status: 'completed' };
   if (isCloudPersistenceEnabled) {
     await rest<void>(`assessments?id=eq.${encodeURIComponent(assessmentId)}`, {
       method: 'PATCH',
@@ -172,6 +180,51 @@ export async function completeAssessmentRole(
     if (invitation) invitation.completed_at = completedAt;
   }
   writeLocal(database);
+}
+
+export async function markAssessmentStarted(assessmentId: string, role: ResponseRole) {
+  const field = role === 'self' ? 'student_status' : 'parent_status';
+  const patch = { [field]: 'in_progress' };
+  if (isCloudPersistenceEnabled) {
+    await rest<void>(`assessments?id=eq.${encodeURIComponent(assessmentId)}`, { method: 'PATCH', body: JSON.stringify(patch) });
+    return;
+  }
+  const database = readLocal();
+  const record = database.assessments.find((item) => item.id === assessmentId);
+  if (record && record[field] !== 'completed') Object.assign(record, patch);
+  writeLocal(database);
+}
+
+export async function seedTestSession(preset: TestPreset, state: 'student' | 'parent' | 'both') {
+  requireTestMode();
+  const assessment = await createAssessment({ studentAlias: `测试学生 · ${preset}`, grade: '高二' });
+  const database = readLocal();
+  const storedAssessment = database.assessments.find((item) => item.id === assessment.id);
+  const includeSelf = state === 'student' || state === 'both';
+  const includeParent = state === 'parent' || state === 'both';
+  for (const [role, include] of [['self', includeSelf], ['observer', includeParent]] as const) {
+    if (!include) continue;
+    for (const answer of mockAnswers(preset, role)) {
+      database.responses.push({ id: crypto.randomUUID(), assessment_id: assessment.id, role, ...answer, created_at: new Date().toISOString() });
+    }
+    Object.assign(storedAssessment ?? assessment, role === 'self'
+      ? { student_status: 'completed', self_completed_at: new Date().toISOString(), status: includeParent ? 'complete' : 'awaiting_observer' }
+      : { parent_status: 'completed', observer_completed_at: new Date().toISOString(), status: includeSelf ? 'complete' : 'self_in_progress' });
+  }
+  writeLocal(database);
+  return assessment;
+}
+
+export function resetTestData() {
+  requireTestMode();
+  const database = readLocal();
+  const testIds = new Set(database.assessments.filter((item) => item.is_test).map((item) => item.id));
+  writeLocal({
+    assessments: database.assessments.filter((item) => !testIds.has(item.id)),
+    responses: database.responses.filter((item) => !testIds.has(item.assessment_id)),
+    invitations: database.invitations.filter((item) => !testIds.has(item.assessment_id)),
+    briefs: database.briefs.filter((item) => !testIds.has(item.assessment_id)),
+  });
 }
 
 function invitationCode() {

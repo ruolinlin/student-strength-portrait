@@ -12,7 +12,7 @@ import { getInvitationByCode, getResponses, updateInvitationRelationship } from 
 import { navigateTo } from '@/lib/navigation';
 import type { InvitationRecord } from '@/types/assessment';
 
-const relationships = ['父亲', '母亲', '祖父母', '其他家人', '老师', '导师', '其他'];
+const relationships = ['父亲', '母亲', '祖父母', '其他家人', '老师', '朋友'];
 
 function getInvitationCode() {
   return decodeURIComponent(window.location.hash.slice(1)).trim().toUpperCase();
@@ -62,8 +62,8 @@ export default function ObserverPage() {
       <SiteHeader quiet />
       <section className="start-card observer-intro">
         <span className="eyebrow">一份来自熟悉之人的观察</span>
-        <h1>TA 邀请你，<br />从你的角度看看 TA。</h1>
-        <div className="observer-copy"><p>不是判断 TA。</p><p>也不用猜 TA 会怎么回答。</p><p>只回答你在真实相处中看到的这个人。</p></div>
+        <h1>邀请您完成，<br />看见 TA 的优势测评。</h1>
+        <div className="observer-copy"><p>请根据真实观察完成测评填写。</p><p>不要猜测 TA 是怎么回答的。</p></div>
         <div className="relationship-picker"><span>你与 TA 的关系 <i>选填</i></span><div>{relationships.map((item) => <button type="button" className={relationship === item ? 'selected' : ''} key={item} onClick={() => setRelationship(item)}>{item}</button>)}</div></div>
         <Button size="lg" className="primary-button" onClick={async () => { await updateInvitationRelationship(invitation.assessment_id, relationship); setStarted(true); }}>开始 <ArrowRight /></Button>
       </section>

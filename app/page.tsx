@@ -1,39 +1,25 @@
 'use client';
 
 import { ArrowRight, Eye, Layers3, Sparkles } from 'lucide-react';
-import { type SyntheticEvent, useState } from 'react';
-
 import { PortraitMark, SiteHeader } from '@/components/site-header';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { navigateTo } from '@/lib/navigation';
 
 export default function Home() {
-  const [code, setCode] = useState('');
-
-  function openInvitation(event: SyntheticEvent<HTMLFormElement>) {
-    event.preventDefault();
-    if (code.trim()) navigateTo(`/observe#${encodeURIComponent(code.trim().toUpperCase())}`);
-  }
-
   return (
     <main className="landing-page">
       <SiteHeader />
       <section className="hero">
         <div className="hero-copy">
-          <span className="eyebrow">Development Strength Portrait</span>
-          <h1>看见自己，<br />也看看别人眼中的你。</h1>
-          <p>一份关于兴趣、优势、偏好、价值与能力信心的双视角画像。你完成自己的部分，再邀请一个真正熟悉你的人。</p>
+          <span className="eyebrow">学生发展优势测评</span>
+          <h1>发现优势，<br />Easy 升学</h1>
+          <p>兴趣倾向 ｜ 优势特质 ｜ 学习偏好 ｜ 价值取向 ｜ 能力信心</p>
           <div className="hero-actions">
             <Button size="lg" className="primary-button hero-primary" onClick={() => navigateTo('/assessment')}>
-              开始我的画像 <ArrowRight />
+              开始我的测评 <ArrowRight />
             </Button>
-            <form className="invite-entry" onSubmit={openInvitation}>
-              <Input aria-label="邀请码" placeholder="输入邀请码" value={code} maxLength={8} onChange={(event) => setCode(event.target.value)} />
-              <Button variant="outline" size="lg" type="submit">我受邀来看看 TA</Button>
-            </form>
           </div>
-          <span className="privacy-note">不需要真实姓名、学校或联系方式</span>
+          <span className="privacy-note">学生与家长分别完成测评，从「我」与「TA」两个视角认识你的发展优势。</span>
         </div>
 
         <div className="hero-art" aria-hidden="true">

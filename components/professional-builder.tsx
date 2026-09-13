@@ -238,6 +238,7 @@ export function ProfessionalBuilder({ assessmentId }: { assessmentId: string }) 
           <Button size="lg" variant="outline" onClick={() => downloadText('student-strength-portrait-data.json', JSON.stringify(structured, null, 2), 'application/json;charset=utf-8')}><Download />下载 JSON</Button>
           <div className="export-note"><strong>资料包不会自动决定专业。</strong><span>请将 Prompt 交给具有当前网络检索能力的 AI 系统，并由专业指导者审阅证据与结论。</span></div>
           <details className="prompt-preview"><summary>预览将要复制的 Prompt</summary><pre>{prompt}</pre></details>
+          <Button size="lg" variant="outline" onClick={() => navigateTo(`/results#${encodeURIComponent(assessmentId)}`)}>返回测评结果，逐项对照解读</Button>
         </aside>
       </div>
     </main>

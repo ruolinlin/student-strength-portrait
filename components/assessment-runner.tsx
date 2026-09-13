@@ -11,6 +11,7 @@ import {
   completeAssessmentRole,
   getResponses,
   isCloudPersistenceEnabled,
+  markAssessmentStarted,
   saveResponse,
 } from '@/lib/storage';
 import { navigateTo } from '@/lib/navigation';
@@ -45,6 +46,7 @@ export function AssessmentRunner({
   const labels = responseLabels[perspective];
 
   useEffect(() => {
+    void markAssessmentStarted(assessmentId, perspective);
     let active = true;
     getResponses(assessmentId, perspective)
       .then((records) => {
@@ -268,7 +270,6 @@ export function AssessmentRunner({
           <ArrowLeft />
           上一题
         </Button>
-        <span>{index < 24 ? '正在慢慢拼出画像' : '已经看见了一些轮廓'}</span>
       </footer>
     </main>
   );
