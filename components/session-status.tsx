@@ -4,9 +4,9 @@ import { ArrowRight, Check, Clipboard, FlaskConical, Link } from 'lucide-react';
 import { useCallback, useEffect, useState } from 'react';
 
 import { Button } from '@/components/ui/button';
-import { getAssessment, getInvitationByAssessment, resetTestData, seedTestSession } from '@/lib/storage';
+import { getAssessment, getInvitationByAssessment, resetTestData, seedTestSession, setDevelopmentSessionState, type DevelopmentSessionState } from '@/lib/storage';
 import { isTestModeEnabled } from '@/lib/test-mode';
-import { navigateTo } from '@/lib/navigation';
+import { appHref, navigateTo } from '@/lib/navigation';
 import type { AssessmentRecord, InvitationRecord } from '@/types/assessment';
 
 type Status = 'not_started' | 'in_progress' | 'completed';
@@ -36,7 +36,7 @@ export function SessionStatus({ assessmentId, showDeveloperTools = false }: { as
   const studentStatus = statusOf(assessment.student_status);
   const parentStatus = statusOf(assessment.parent_status);
   const bothDone = studentStatus === 'completed' && parentStatus === 'completed';
-  const observerUrl = invitation ? `${window.location.origin}${window.location.pathname.replace(/\/session\/?$/, '/observe/')}#${invitation.code}` : '';
+  const observerUrl = invitation ? `${window.location.origin}${appHref('/parent/invite')}#${invitation.code}` : '';
   const copy = async (value: string, confirmation: string) => {
     if (!value) return;
     await navigator.clipboard.writeText(value);
@@ -45,6 +45,11 @@ export function SessionStatus({ assessmentId, showDeveloperTools = false }: { as
   const seed = async (state: 'student' | 'parent' | 'both') => {
     const next = await seedTestSession(state === 'both' ? 'mixed' : state === 'student' ? 'studentHigher' : 'parentHigher', state);
     navigateTo(`/session?dev=true#${next.id}`);
+  };
+  const setDevelopmentState = async (state: DevelopmentSessionState) => {
+    await setDevelopmentSessionState(assessmentId, state);
+    await refresh();
+    setMessage('测试状态已更新');
   };
 
   return (
@@ -91,7 +96,13 @@ export function SessionStatus({ assessmentId, showDeveloperTools = false }: { as
       {isTestModeEnabled && showDeveloperTools && <details className="details-drawer session-developer-tools">
         <summary><FlaskConical />开发测试工具</summary>
         <p>仅在本机测试链接中显示；测试数据不会连接或写入 Supabase。</p>
-        <div className="hero-actions"><Button onClick={() => void seed('student')}>模拟学生完成</Button><Button onClick={() => void seed('parent')}>模拟家长完成</Button><Button onClick={() => void seed('both')}>模拟双方完成</Button><Button variant="destructive" onClick={() => { resetTestData(); setMessage('测试数据已重置'); }}>重置测试数据</Button></div>
+        <div className="hero-actions"><Button onClick={() => void seed('student')}>新建学生完成</Button><Button onClick={() => void seed('parent')}>新建家长完成</Button><Button onClick={() => void seed('both')}>新建双方完成</Button></div>
+        <div className="development-state-grid">{([
+          ['student_not_started', '学生未开始'], ['student_in_progress', '学生进行中'], ['student_completed', '学生已完成'],
+          ['parent_not_started', '家长未开始'], ['parent_in_progress', '家长进行中'], ['parent_completed', '家长已完成'],
+          ['both_completed', '双方已完成'], ['basic_info_completed', '基础信息完成'], ['counselor_case_ready', '辅导案例就绪'],
+        ] as Array<[DevelopmentSessionState, string]>).map(([state, text]) => <Button key={state} variant="outline" onClick={() => void setDevelopmentState(state)}>{text}</Button>)}</div>
+        <div className="hero-actions"><Button variant="destructive" onClick={() => { resetTestData(); setMessage('测试数据已重置'); }}>重置测试数据</Button></div>
       </details>}
     </main>
   );

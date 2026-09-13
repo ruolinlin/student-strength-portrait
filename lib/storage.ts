@@ -215,6 +215,52 @@ export async function seedTestSession(preset: TestPreset, state: 'student' | 'pa
   return assessment;
 }
 
+export type DevelopmentSessionState =
+  | 'student_not_started'
+  | 'student_in_progress'
+  | 'student_completed'
+  | 'parent_not_started'
+  | 'parent_in_progress'
+  | 'parent_completed'
+  | 'both_completed'
+  | 'basic_info_completed'
+  | 'counselor_case_ready';
+
+export async function setDevelopmentSessionState(
+  assessmentId: string,
+  state: DevelopmentSessionState,
+): Promise<AssessmentRecord> {
+  requireTestMode();
+  const database = readLocal();
+  const assessment = database.assessments.find((item) => item.id === assessmentId);
+  if (!assessment?.is_test) throw new Error('Development state can only change a test session.');
+
+  const completedStudent = !['student_not_started', 'student_in_progress'].includes(state);
+  const completedParent = ['parent_completed', 'both_completed', 'basic_info_completed', 'counselor_case_ready'].includes(state);
+  const studentInProgress = state === 'student_in_progress';
+  const parentInProgress = state === 'parent_in_progress';
+  const now = new Date().toISOString();
+
+  database.responses = database.responses.filter((response) => response.assessment_id !== assessmentId);
+  for (const [role, shouldPopulate] of [['self', completedStudent], ['observer', completedParent]] as const) {
+    if (!shouldPopulate) continue;
+    for (const answer of mockAnswers(role === 'self' ? 'studentHigher' : 'parentHigher', role)) {
+      database.responses.push({ id: crypto.randomUUID(), assessment_id: assessmentId, role, ...answer, created_at: now });
+    }
+  }
+  Object.assign(assessment, {
+    student_status: completedStudent ? 'completed' : studentInProgress ? 'in_progress' : 'not_started',
+    parent_status: completedParent ? 'completed' : parentInProgress ? 'in_progress' : 'not_started',
+    basic_info_status: ['basic_info_completed', 'counselor_case_ready'].includes(state) ? 'completed' : 'not_started',
+    guidance_status: state === 'counselor_case_ready' ? 'ready_for_counselor' : 'not_ready',
+    self_completed_at: completedStudent ? now : null,
+    observer_completed_at: completedParent ? now : null,
+    status: completedParent ? 'complete' : completedStudent ? 'awaiting_observer' : 'self_in_progress',
+  });
+  writeLocal(database);
+  return assessment;
+}
+
 export function resetTestData() {
   requireTestMode();
   const database = readLocal();

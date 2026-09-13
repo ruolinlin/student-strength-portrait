@@ -195,6 +195,27 @@ button { cursor: pointer; }
 .session-message { margin: 16px 0 0; color: #5d58a6; font-size: 13px; text-align: center; }
 .session-developer-tools { margin-top: 42px; }
 .session-developer-tools > p { margin: 0 0 14px; color: var(--text-secondary); font-size: 12px; }
+.development-state-grid { margin: 14px 0; display: flex; flex-wrap: wrap; gap: 8px; }
+.development-state-grid button { font-size: 12px; }
+
+/* Counselor case (development preview) */
+.counselor-page { padding: clamp(44px, 8vh, 86px) 20px 80px; }
+.counselor-case { width: min(820px, 100%); margin: 0 auto; padding: clamp(28px, 6vw, 58px); border: 1px solid var(--border); border-radius: 28px; background: rgb(255 255 255 / 80%); box-shadow: var(--shadow); }
+.counselor-case > h1 { margin: 17px 0; font-size: clamp(32px, 5vw, 48px); font-weight: 520; letter-spacing: -.045em; }
+.counselor-case > p { max-width: 610px; margin: 0; color: var(--text-secondary); line-height: 1.75; }
+.case-status-grid { margin: 38px 0 30px; display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+.case-status-grid > section { padding: 23px; border: 1px solid rgb(226 222 218 / 90%); border-radius: 18px; background: rgb(255 255 255 / 72%); }
+.case-status-grid h2 { margin: 0 0 13px; font-size: 16px; font-weight: 600; }
+.case-state-row { padding: 11px 0; display: flex; justify-content: space-between; gap: 12px; border-top: 1px solid #eeeae7; color: #69645f; font-size: 13px; }
+.case-state-row b { display: inline-flex; align-items: center; gap: 4px; color: #87817c; font-size: 12px; font-weight: 550; }
+.case-state-row b svg { width: 13px; }
+.case-state-row .is-complete { color: #397960; }
+.case-state-row .is-progress { color: #5d58a6; }
+.case-note { margin: 13px 0 0; color: var(--text-secondary); font-size: 12px; line-height: 1.6; }
+.case-actions { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+.case-actions button { border-radius: 999px; }
+.case-locked { padding: 9px 12px; display: inline-flex; align-items: center; gap: 6px; border-radius: 999px; background: #f1efed; color: #98918c; font-size: 12px; }
+.case-locked svg { width: 14px; }
 
 /* Assessment */
 .assessment-shell { min-height: 100svh; padding: 0 28px; display: grid; grid-template-rows: 72px 2px 1fr 72px; background: var(--background); }
@@ -406,6 +427,8 @@ button { cursor: pointer; }
   .field-grid .wide { grid-column: auto; }
   .form-section { padding: 26px 20px; }
   .form-section__heading { grid-template-columns: 28px 1fr; }
+  .case-status-grid { grid-template-columns: 1fr; }
+  .counselor-case { padding: 28px 22px; border-radius: 22px; }
 }
 
 @media (prefers-reduced-motion: reduce) {
