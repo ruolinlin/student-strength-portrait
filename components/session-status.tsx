@@ -34,7 +34,8 @@ export function SessionStatus({ assessmentId, showDeveloperTools = false }: { as
   useEffect(() => { void refresh(); }, [refresh]);
   useEffect(() => {
     if (!invitation?.code) return;
-    const url = `${window.location.origin}${appHref('/parent/invite')}#${invitation.code}`;
+    const testQuery = new URLSearchParams(window.location.search).get('test') === 'true' ? '?test=true' : '';
+    const url = `${window.location.origin}${appHref(`/parent/invite${testQuery}`)}#${invitation.code}`;
     void QRCode.toDataURL(url, { width: 220, margin: 1 }).then(setQrCode);
   }, [invitation?.code]);
 
@@ -44,7 +45,8 @@ export function SessionStatus({ assessmentId, showDeveloperTools = false }: { as
   const studentStatus = statusOf(assessment.student_status);
   const parentStatus = statusOf(assessment.parent_status);
   const bothDone = studentStatus === 'completed' && parentStatus === 'completed';
-  const observerUrl = invitation ? `${window.location.origin}${appHref('/parent/invite')}#${invitation.code}` : '';
+  const testQuery = new URLSearchParams(window.location.search).get('test') === 'true' ? '?test=true' : '';
+  const observerUrl = invitation ? `${window.location.origin}${appHref(`/parent/invite${testQuery}`)}#${invitation.code}` : '';
   const copy = async (value: string, confirmation: string) => {
     if (!value) return;
     await navigator.clipboard.writeText(value);

@@ -19,3 +19,13 @@ export async function sendMagicLink(email: string) {
   const { error } = await supabaseAuth.auth.signInWithOtp({ email, options: { emailRedirectTo: redirect } });
   if (error) throw error;
 }
+
+/**
+ * Creates a throw-away authenticated identity for the isolated cross-device
+ * test flow. It is intentionally only reachable from the `?test=true` UI.
+ */
+export async function signInForTest() {
+  if (!supabaseAuth) throw new Error('Supabase is not configured.');
+  const { error } = await supabaseAuth.auth.signInAnonymously();
+  if (error) throw error;
+}

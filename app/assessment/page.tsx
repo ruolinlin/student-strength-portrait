@@ -25,7 +25,8 @@ export default function StartAssessmentPage() {
     setError('');
     try {
       const assessment = await createAssessment({ studentAlias });
-      navigateTo(`/session#${encodeURIComponent(assessment.id)}`);
+      const testQuery = new URLSearchParams(window.location.search).get('test') === 'true' ? '?test=true' : '';
+      navigateTo(`/session${testQuery}#${encodeURIComponent(assessment.id)}`);
     } catch {
       setError('暂时没能建立你的画像，请稍后再试。');
       setBusy(false);
