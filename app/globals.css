@@ -146,6 +146,9 @@ button { cursor: pointer; }
 .auth-test-access { margin-top: 28px; padding-top: 22px; border-top: 1px solid var(--border); }
 .auth-test-access > span { color: var(--accent); font-size: 12px; font-weight: 700; letter-spacing: .08em; }
 .auth-test-access p { margin: 8px 0 14px; color: var(--text-secondary); font-size: 14px; }
+.invite-url-debug { margin-top: 18px; padding: 12px 14px; border: 1px dashed var(--border); border-radius: 12px; background: rgb(255 255 255 / 66%); color: var(--text-secondary); font-size: 12px; line-height: 1.5; }
+.invite-url-debug span { display: block; margin-bottom: 5px; color: var(--accent); font-weight: 700; }
+.invite-url-debug code { display: block; overflow-wrap: anywhere; color: var(--text-primary); font-family: var(--font-mono, ui-monospace, SFMono-Regular, Menlo, monospace); }
 .welcome-page::before { content: ''; position: absolute; width: 52vw; height: 52vw; left: -28vw; top: 22vh; border-radius: 50%; background: rgb(238 174 208 / 11%); filter: blur(70px); }
 .welcome-card { width: min(500px, calc(100% - 48px)); min-height: calc(100vh - 84px); margin: 0 auto; padding: clamp(42px, 9vh, 104px) 0 72px; position: relative; display: flex; flex-direction: column; justify-content: center; }
 .hello-mark { width: min(100%, 480px); margin: 0 auto; }

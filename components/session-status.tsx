@@ -8,7 +8,7 @@ import QRCode from 'qrcode';
 import { Button } from '@/components/ui/button';
 import { getAssessment, getInvitationByAssessment, resetTestData, seedTestSession, setDevelopmentSessionState, type DevelopmentSessionState } from '@/lib/storage';
 import { isTestModeEnabled } from '@/lib/test-mode';
-import { appHref, navigateTo } from '@/lib/navigation';
+import { navigateTo, publicAppHref } from '@/lib/navigation';
 import type { AssessmentRecord, InvitationRecord } from '@/types/assessment';
 
 type Status = 'not_started' | 'in_progress' | 'completed';
@@ -36,7 +36,7 @@ export function SessionStatus({ assessmentId, showDeveloperTools = false }: { as
     if (!invitation?.code) return;
     const query = new URLSearchParams({ invite: invitation.code });
     if (new URLSearchParams(window.location.search).get('test') === 'true') query.set('test', 'true');
-    const url = `${window.location.origin}${appHref(`/parent/invite?${query.toString()}`)}`;
+    const url = publicAppHref(`/parent/invite?${query.toString()}`);
     void QRCode.toDataURL(url, { width: 220, margin: 1 }).then(setQrCode);
   }, [invitation?.code]);
 
@@ -48,7 +48,8 @@ export function SessionStatus({ assessmentId, showDeveloperTools = false }: { as
   const bothDone = studentStatus === 'completed' && parentStatus === 'completed';
   const invitationQuery = invitation ? new URLSearchParams({ invite: invitation.code }) : null;
   if (invitationQuery && new URLSearchParams(window.location.search).get('test') === 'true') invitationQuery.set('test', 'true');
-  const observerUrl = invitationQuery ? `${window.location.origin}${appHref(`/parent/invite?${invitationQuery.toString()}`)}` : '';
+  const observerUrl = invitationQuery ? publicAppHref(`/parent/invite?${invitationQuery.toString()}`) : '';
+  const isInvitationTest = new URLSearchParams(window.location.search).get('test') === 'true';
   const copy = async (value: string, confirmation: string) => {
     if (!value) return;
     await navigator.clipboard.writeText(value);
@@ -93,6 +94,7 @@ export function SessionStatus({ assessmentId, showDeveloperTools = false }: { as
               <Button variant="outline" onClick={() => void copy(invitation?.code ?? '', '邀请码已复制')}><Clipboard />复制邀请码</Button>
             </div>
             {qrCode && <div className="invite-qr"><img src={qrCode} alt="家长邀请链接二维码" /><span>请让家长使用手机扫码打开</span></div>}
+            {isInvitationTest && observerUrl && <div className="invite-url-debug"><span>二维码实际链接</span><code>{observerUrl}</code></div>}
           </>}
           {parentStatus === 'in_progress' && <p>家长正在填写</p>}
           {parentStatus === 'completed' && <p>已完成 <Check aria-label="已完成" /></p>}
