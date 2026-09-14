@@ -56,3 +56,17 @@ export interface InvitationRecord {
   created_at: string;
   completed_at?: string | null;
 }
+
+export interface AssessmentReportRecord {
+  assessment_id: string;
+  role: ResponseRole;
+  profile: import('./portrait').PortraitProfile;
+  created_at?: string;
+  updated_at?: string;
+}
+
+export interface CounselorCaseRecord {
+  assessment_id: string;
+  submitted_at?: string;
+  status: 'ready_for_guidance' | 'in_guidance' | 'completed';
+}

@@ -2,10 +2,13 @@
 
 import type {
   AssessmentRecord,
+  AssessmentReportRecord,
+  CounselorCaseRecord,
   InvitationRecord,
   ResponseRecord,
   ResponseRole,
 } from '@/types/assessment';
+import type { PortraitProfile } from '@/types/portrait';
 import type { ProfessionalBriefRecord } from '@/types/professional';
 import { isTestModeEnabled, mockAnswers, requireTestMode, type TestPreset } from '@/lib/test-mode';
 import { currentUserId, supabaseAuth } from '@/lib/supabase-auth';
@@ -148,6 +151,32 @@ export async function getResponses(
   return readLocal().responses.filter(
     (response) => response.assessment_id === assessmentId && response.role === role,
   );
+}
+
+export async function getAssessmentReport(
+  assessmentId: string,
+  role: ResponseRole,
+): Promise<AssessmentReportRecord | null> {
+  if (isCloudPersistenceEnabled) {
+    const records = await rest<AssessmentReportRecord[]>(
+      `assessment_reports?assessment_id=eq.${encodeURIComponent(assessmentId)}&role=eq.${role}&limit=1`,
+    );
+    return records[0] ?? null;
+  }
+  return null;
+}
+
+export async function saveAssessmentReport(
+  assessmentId: string,
+  role: ResponseRole,
+  profile: PortraitProfile,
+): Promise<void> {
+  if (!isCloudPersistenceEnabled) return;
+  await rest<void>('assessment_reports?on_conflict=assessment_id,role', {
+    method: 'POST',
+    headers: { Prefer: 'resolution=merge-duplicates,return=minimal' },
+    body: JSON.stringify({ assessment_id: assessmentId, role, profile, updated_at: new Date().toISOString() }),
+  });
 }
 
 export async function completeAssessmentRole(
@@ -398,6 +427,11 @@ export async function saveProfessionalBrief(
       headers: { Prefer: 'resolution=merge-duplicates,return=minimal' },
       body: JSON.stringify(record),
     });
+    await rest<void>(`assessments?id=eq.${encodeURIComponent(brief.assessment_id)}`, {
+      method: 'PATCH',
+      headers: { Prefer: 'return=minimal' },
+      body: JSON.stringify({ basic_info_status: 'completed' }),
+    });
     return;
   }
   const database = readLocal();
@@ -405,4 +439,21 @@ export async function saveProfessionalBrief(
   if (index >= 0) database.briefs[index] = record;
   else database.briefs.push(record);
   writeLocal(database);
+}
+
+export async function submitCounselorCase(assessmentId: string): Promise<void> {
+  if (isCloudPersistenceEnabled) {
+    await rest<void>('rpc/submit_counselor_case', {
+      method: 'POST',
+      body: JSON.stringify({ target_assessment_id: assessmentId }),
+    });
+    return;
+  }
+}
+
+export async function getCounselorCases(): Promise<CounselorCaseRecord[]> {
+  if (isCloudPersistenceEnabled) {
+    return rest<CounselorCaseRecord[]>('counselor_cases?order=submitted_at.desc');
+  }
+  return [];
 }

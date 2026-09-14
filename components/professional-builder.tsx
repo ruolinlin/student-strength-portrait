@@ -2,7 +2,7 @@
 
 /* oxlint-disable jsx-a11y/label-has-associated-control -- Base UI controls are nested inside their visible labels. */
 
-import { Check, Clipboard, Download, Save } from 'lucide-react';
+import { Check, Clipboard, Download, Save, Send } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
 
 import { SiteHeader } from '@/components/site-header';
@@ -21,9 +21,11 @@ import {
 import { completeAnswerMap, scoreProfile } from '@/lib/scoring';
 import {
   getAssessment,
+  getAssessmentReport,
   getProfessionalBrief,
   getResponses,
   saveProfessionalBrief,
+  submitCounselorCase,
 } from '@/lib/storage';
 import {
   emptyProfessionalContext,
@@ -54,17 +56,16 @@ export function ProfessionalBuilder({ assessmentId }: { assessmentId: string }) 
       getResponses(assessmentId, 'self'),
       getResponses(assessmentId, 'observer'),
       getProfessionalBrief(assessmentId),
+      getAssessmentReport(assessmentId, 'self'),
+      getAssessmentReport(assessmentId, 'observer'),
     ])
-      .then(([assessment, selfRecords, observerRecords, brief]) => {
-        if (!assessment || selfRecords.length !== 72) {
+      .then(([assessment, selfRecords, observerRecords, brief, selfReport, observerReport]) => {
+        const selfProfile = selfReport?.profile ?? (selfRecords.length === 72 ? scoreProfile(completeAnswerMap(selfRecords)) : null);
+        if (!assessment || !selfProfile) {
           setPayload(null);
           return;
         }
-        const selfProfile = scoreProfile(completeAnswerMap(selfRecords));
-        const observerProfile =
-          observerRecords.length === 72
-            ? scoreProfile(completeAnswerMap(observerRecords))
-            : null;
+        const observerProfile = observerReport?.profile ?? (observerRecords.length === 72 ? scoreProfile(completeAnswerMap(observerRecords)) : null);
         const sharedProfile = observerProfile
           ? compareProfiles(selfProfile, observerProfile)
           : null;
@@ -156,6 +157,20 @@ export function ProfessionalBuilder({ assessmentId }: { assessmentId: string }) 
     }
   }
 
+  async function submitForCounselor() {
+    await save();
+    setBusy(true);
+    setStatus('');
+    try {
+      await submitCounselorCase(assessmentId);
+      setStatus('已提交给指导师');
+    } catch {
+      setStatus('请先保存基础信息后再提交');
+    } finally {
+      setBusy(false);
+    }
+  }
+
   if (payload === undefined) {
     return <main className="assessment-loading"><span className="breathing-dot" /><p>正在整理专业解读资料</p></main>;
   }
@@ -227,6 +242,7 @@ export function ProfessionalBuilder({ assessmentId }: { assessmentId: string }) 
           </section>
 
           <div className="save-row"><Button size="lg" variant="outline" onClick={() => void save()} disabled={busy}><Save />{busy ? '正在保存' : '保存背景信息'}</Button>{status && <span>{status}</span>}</div>
+          <section className="form-section counselor-submit-section"><div className="form-section__heading"><span>08</span><div><h2>准备进入升学指导</h2><p>保存基础信息后，可将这份共享测评会话提交给已授权的指导师。</p></div></div><Button size="lg" className="primary-button" onClick={() => void submitForCounselor()} disabled={busy}><Send />分享给指导师</Button></section>
         </div>
 
         <aside className="export-panel">

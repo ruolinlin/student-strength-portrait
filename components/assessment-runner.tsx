@@ -13,8 +13,10 @@ import {
   isCloudPersistenceEnabled,
   markAssessmentStarted,
   saveResponse,
+  saveAssessmentReport,
 } from '@/lib/storage';
 import { navigateTo } from '@/lib/navigation';
+import { scoreProfile } from '@/lib/scoring';
 import type { ResponseRole } from '@/types/assessment';
 
 const transition = { duration: 0.25, ease: 'easeOut' as const };
@@ -93,6 +95,11 @@ export function AssessmentRunner({
         });
         await new Promise((resolve) => setTimeout(resolve, 190));
         if (index === assessmentItems.length - 1) {
+          await saveAssessmentReport(
+            assessmentId,
+            perspective,
+            scoreProfile({ ...answers, [currentItem.id]: score }),
+          );
           await completeAssessmentRole(assessmentId, perspective);
           localStorage.removeItem(progressKey);
           const observerQuery = perspective === 'observer' ? '?from=observer' : '';
@@ -108,7 +115,7 @@ export function AssessmentRunner({
       } finally {
         setSaving(false);
       }
-    }, [assessmentId, currentItem, index, perspective, progressKey, saving, showIntro, startedAt],
+    }, [answers, assessmentId, currentItem, index, perspective, progressKey, saving, showIntro, startedAt],
   );
 
   useEffect(() => {

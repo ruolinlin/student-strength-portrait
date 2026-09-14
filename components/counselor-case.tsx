@@ -28,7 +28,7 @@ export function CounselorCase({ assessmentId }: { assessmentId: string }) {
     <section className="counselor-case" aria-labelledby="case-title">
       <span className="eyebrow">Counselor Case · Development Preview</span>
       <h1 id="case-title">{assessment.student_alias || '学生'}的辅导案例</h1>
-      <p>这里汇集同一份测评会话的状态与后续指导材料。当前为本地开发预览，不包含身份或权限控制。</p>
+      <p>这里汇集同一份测评会话的状态与后续指导材料，仅对已授权指导师和学生主动提交的案例开放。</p>
       <div className="case-status-grid">
         <section><h2>测评进度</h2><StateRow label="学生测评" value={assessment.student_status} /><StateRow label="家长测评" value={assessment.parent_status} /><StateRow label="学生基础信息" value={assessment.basic_info_status} /></section>
         <section><h2>指导准备</h2><StateRow label="双视角对比" value={comparisonReady ? 'completed' : 'not_ready'} /><StateRow label="指导流程" value={assessment.guidance_status} /><p className="case-note">{comparisonReady ? '两个测评视角已经齐备，可开始对照解读。' : '等待双方完成后，双视角对比将自动可用。'}</p></section>

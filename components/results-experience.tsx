@@ -18,6 +18,7 @@ import { navigateTo } from '@/lib/navigation';
 import { completeAnswerMap, scoreProfile } from '@/lib/scoring';
 import {
   getAssessment,
+  getAssessmentReport,
   getResponses,
 } from '@/lib/storage';
 import type { AssessmentRecord } from '@/types/assessment';
@@ -39,6 +40,8 @@ export function ResultsExperience({ assessmentId }: { assessmentId: string }) {
   const [assessment, setAssessment] = useState<AssessmentRecord | null>();
   const [selfAnswers, setSelfAnswers] = useState<Record<string, number>>({});
   const [observerAnswers, setObserverAnswers] = useState<Record<string, number>>({});
+  const [selfReport, setSelfReport] = useState<ReturnType<typeof scoreProfile> | null>(null);
+  const [observerReport, setObserverReport] = useState<ReturnType<typeof scoreProfile> | null>(null);
   const [error, setError] = useState('');
 
   useEffect(() => {
@@ -46,22 +49,26 @@ export function ResultsExperience({ assessmentId }: { assessmentId: string }) {
       getAssessment(assessmentId),
       getResponses(assessmentId, 'self'),
       getResponses(assessmentId, 'observer'),
+      getAssessmentReport(assessmentId, 'self'),
+      getAssessmentReport(assessmentId, 'observer'),
     ])
-      .then(async ([record, self, observer]) => {
+      .then(async ([record, self, observer, savedSelfReport, savedObserverReport]) => {
         setAssessment(record);
         setSelfAnswers(completeAnswerMap(self));
         setObserverAnswers(completeAnswerMap(observer));
+        setSelfReport(savedSelfReport?.profile ?? null);
+        setObserverReport(savedObserverReport?.profile ?? null);
       })
       .catch(() => setError('还没能读取这幅画像，请稍后再试。'));
   }, [assessmentId]);
 
   const selfProfile = useMemo(
-    () => (Object.keys(selfAnswers).length === 72 ? scoreProfile(selfAnswers) : null),
-    [selfAnswers],
+    () => selfReport ?? (Object.keys(selfAnswers).length === 72 ? scoreProfile(selfAnswers) : null),
+    [selfAnswers, selfReport],
   );
   const observerProfile = useMemo(
-    () => (Object.keys(observerAnswers).length === 72 ? scoreProfile(observerAnswers) : null),
-    [observerAnswers],
+    () => observerReport ?? (Object.keys(observerAnswers).length === 72 ? scoreProfile(observerAnswers) : null),
+    [observerAnswers, observerReport],
   );
   const comparison = useMemo(
     () => (selfProfile && observerProfile ? compareProfiles(selfProfile, observerProfile) : null),
@@ -78,7 +85,8 @@ export function ResultsExperience({ assessmentId }: { assessmentId: string }) {
   if (!assessment || error) {
     return <main className="soft-page"><SiteHeader quiet /><section className="start-card"><span className="eyebrow">暂时找不到这幅画像</span><h1>{error || '这个链接可能已经失效。'}</h1><Button onClick={() => navigateTo('/')}>回到首页</Button></section></main>;
   }
-  if (!selfProfile) {
+  const primaryProfile = fromObserver ? observerProfile : selfProfile;
+  if (!primaryProfile) {
     return (
       <main className="soft-page"><SiteHeader quiet /><section className="start-card"><span className="eyebrow">画像还没完成</span><h1>你已经留下了 {Object.keys(selfAnswers).length} 个回答。可以从上次的位置继续。</h1><Button className="primary-button" onClick={() => navigateTo(`/assessment/run#${encodeURIComponent(assessmentId)}`)}>继续完成 <ArrowRight /></Button></section></main>
     );
@@ -91,16 +99,16 @@ export function ResultsExperience({ assessmentId }: { assessmentId: string }) {
 
       <section className="portrait-reveal">
         <div className="portrait-reveal__copy">
-          <span className="eyebrow">Self Portrait</span>
-          <h1>这是我眼中的自己。</h1>
-          <p>它不是一个类型，也不是对你的定论。它记下了你此刻对自己的理解：哪些事会吸引你，你如何做事，以及什么对你重要。</p>
+          <span className="eyebrow">{fromObserver ? 'Parent Portrait' : 'Self Portrait'}</span>
+          <h1>{fromObserver ? '这是你观察到的 TA。' : '这是我眼中的自己。'}</h1>
+          <p>{fromObserver ? '这不是对 TA 的定论，而是你此刻基于长期观察形成的一幅画像：哪些事情会吸引 TA，TA 通常如何做事，以及什么对 TA 更重要。' : '它不是一个类型，也不是对你的定论。它记下了你此刻对自己的理解：哪些事会吸引你，你如何做事，以及什么对你重要。'}</p>
         </div>
-        <PortraitVisual self={selfProfile} />
+        <PortraitVisual self={primaryProfile} />
       </section>
 
-      <details className="details-drawer"><summary>看看画像里更细的线索 <ArrowRight /></summary><ProfileDetails profile={selfProfile} /></details>
+      <details className="details-drawer"><summary>看看画像里更细的线索 <ArrowRight /></summary><ProfileDetails profile={primaryProfile} /></details>
 
-      {!observerProfile ? (
+      {!observerProfile || !selfProfile ? (
         <section className="results-status-card results-status-card--pending">
           <span className="eyebrow">家长测评</span>
           <h2>{assessment.parent_status === 'in_progress' ? '家长正在填写。' : '家长测评尚未完成。'}</h2>
@@ -118,11 +126,11 @@ export function ResultsExperience({ assessmentId }: { assessmentId: string }) {
               <Button className="primary-button" onClick={() => document.getElementById('dual-perspective-report')?.scrollIntoView({ behavior: 'smooth' })}>查看双视角报告 <ArrowRight /></Button>
             </div>
           </section>
-          <section className="portrait-reveal portrait-reveal--other">
+          {!fromObserver && <section className="portrait-reveal portrait-reveal--other">
             <div className="portrait-reveal__copy"><span className="eyebrow">Portrait from Others</span><h2>这是你观察到的 TA。</h2><p>这不是对 TA 的定论，而是你此刻基于长期观察形成的一幅画像：哪些事情会吸引 TA，TA 通常如何做事，以及什么对 TA 更重要。</p></div>
             <PortraitVisual self={observerProfile} />
-          </section>
-          <details className="details-drawer"><summary>看看 TA 眼中更细的线索 <ArrowRight /></summary><ProfileDetails profile={observerProfile} /></details>
+          </section>}
+          {!fromObserver && <details className="details-drawer"><summary>看看 TA 眼中更细的线索 <ArrowRight /></summary><ProfileDetails profile={observerProfile} /></details>}
 
           <section className="shared-portrait" id="dual-perspective-report">
             <div className="shared-heading"><span className="eyebrow">What we see together</span><h2>我们一起看见的你。</h2><p>这不是一次“答对了多少”的比较。同样的地方让我们看见稳定的线索，不同的地方让我们有机会问出更好的问题。</p></div>
