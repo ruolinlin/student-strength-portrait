@@ -83,6 +83,10 @@ export async function createAssessment(input: {
   if (isCloudPersistenceEnabled) {
     const userId = await currentUserId();
     if (!userId) throw new Error('Authentication required');
+    const existing = await rest<AssessmentRecord[]>(
+      `assessments?student_user_id=eq.${encodeURIComponent(userId)}&limit=1`,
+    );
+    if (existing[0]) return existing[0];
     const [created] = await rest<AssessmentRecord[]>('assessments', {
       method: 'POST',
       headers: { Prefer: 'return=representation' },
