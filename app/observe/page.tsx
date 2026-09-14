@@ -16,7 +16,7 @@ import type { InvitationRecord } from '@/types/assessment';
 const relationships = ['父亲', '母亲', '祖父母', '其他家人', '老师', '朋友'];
 
 function getInvitationCode() {
-  return decodeURIComponent(window.location.hash.slice(1)).trim().toUpperCase();
+  return decodeURIComponent(new URLSearchParams(window.location.search).get('invite') || window.location.hash.slice(1)).trim().toUpperCase();
 }
 
 function subscribeToHashChange(callback: () => void) {

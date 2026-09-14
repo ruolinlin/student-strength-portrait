@@ -139,6 +139,7 @@ button { cursor: pointer; }
 .storage-note svg { width: 15px; }
 .welcome-page { position: relative; overflow: hidden; background: radial-gradient(circle at 20% 36%, rgb(136 205 218 / 13%), transparent 28%), radial-gradient(circle at 78% 36%, rgb(195 172 238 / 15%), transparent 32%), radial-gradient(circle at 52% 84%, rgb(244 194 147 / 10%), transparent 28%), #fdfcfb; }
 .auth-overlay { position: fixed; inset: 0; z-index: 30; display: grid; place-items: center; padding: 24px; background: rgb(251 250 248 / 62%); backdrop-filter: blur(8px); }
+.auth-page { min-height: 100vh; display: grid; place-items: center; padding: 28px; background: radial-gradient(circle at 20% 20%, rgb(136 205 218 / 18%), transparent 30%), radial-gradient(circle at 80% 75%, rgb(195 172 238 / 18%), transparent 34%), #fdfcfb; }
 .auth-modal { width: min(500px, 100%); padding: clamp(28px, 5vw, 46px); border: 1px solid var(--border); border-radius: 26px; background: rgb(255 255 255 / 94%); box-shadow: var(--shadow); }
 .auth-modal h1 { margin: 16px 0; font-size: clamp(30px, 4vw, 42px); letter-spacing: -.04em; }
 .auth-modal > p { color: var(--text-secondary); line-height: 1.7; }
@@ -146,7 +147,7 @@ button { cursor: pointer; }
 .welcome-card { width: min(500px, calc(100% - 48px)); min-height: calc(100vh - 84px); margin: 0 auto; padding: clamp(42px, 9vh, 104px) 0 72px; position: relative; display: flex; flex-direction: column; justify-content: center; }
 .hello-mark { width: min(100%, 480px); margin: 0 auto; }
 .hello-mark svg { width: 100%; height: auto; overflow: visible; }
-.hello-stroke { fill: transparent; stroke: url(#hello-gradient); stroke-width: 2.3; stroke-linecap: round; stroke-linejoin: round; stroke-dasharray: 1100; stroke-dashoffset: 1100; font-family: "Snell Roundhand", "Segoe Script", "Apple Chancery", cursive; font-size: 172px; font-weight: 400; letter-spacing: -11px; animation: hello-draw 2.1s cubic-bezier(.4, 0, .2, 1) forwards, hello-fill .65s ease 1.7s forwards; }
+.hello-stroke { fill: transparent; stroke: url(#hello-gradient); stroke-width: 2.3; stroke-linecap: round; stroke-linejoin: round; stroke-dasharray: 1100; stroke-dashoffset: 1100; font-family: "Snell Roundhand", "Segoe Script", "Apple Chancery", cursive; font-size: 172px; font-weight: 400; letter-spacing: 11px; animation: hello-draw 2.1s cubic-bezier(.4, 0, .2, 1) forwards, hello-fill .65s ease 1.7s forwards; }
 .welcome-greeting { margin: -8px 0 54px; color: #716e6b; text-align: center; font-size: 17px; letter-spacing: .02em; }
 .welcome-form { display: grid; gap: 13px; }
 .welcome-form label { display: grid; gap: 11px; }
@@ -170,7 +171,12 @@ button { cursor: pointer; }
 
 /* Assessment session */
 .session-page { padding: clamp(48px, 9vh, 96px) 20px 80px; }
-.session-shell { width: min(680px, 100%); margin: 0 auto; }
+.session-shell { width: min(680px, 100%); margin: 0 auto; display: flex; flex-direction: column; }
+.session-heading { order: 0; }
+.session-card--parent { order: 1; }
+.session-card--student { order: 2; }
+.session-card--comparison { order: 3; }
+.session-message { order: 4; }
 .session-heading { margin: 0 0 38px; text-align: center; }
 .session-heading h1 { margin: 0 0 12px; color: var(--text-primary); font-size: clamp(34px, 5vw, 48px); font-weight: 520; letter-spacing: -.045em; }
 .session-heading p { margin: 0; color: var(--text-secondary); font-size: 15px; line-height: 1.75; }
