@@ -8,9 +8,10 @@ import { ArrowRight } from 'lucide-react';
 import { type SyntheticEvent, useState } from 'react';
 
 import { SiteHeader } from '@/components/site-header';
+import { AuthGate } from '@/components/auth-gate';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { createAssessment } from '@/lib/storage';
+import { createAssessment, isCloudPersistenceEnabled } from '@/lib/storage';
 import { navigateTo } from '@/lib/navigation';
 
 export default function StartAssessmentPage() {
@@ -31,7 +32,7 @@ export default function StartAssessmentPage() {
     }
   }
 
-  return (
+  const page = (
     <main className="soft-page welcome-page">
       <SiteHeader quiet />
       <section className="welcome-card">
@@ -46,4 +47,5 @@ export default function StartAssessmentPage() {
       </section>
     </main>
   );
+  return isCloudPersistenceEnabled ? <AuthGate>{page}</AuthGate> : page;
 }

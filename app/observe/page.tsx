@@ -6,9 +6,10 @@ import { ArrowRight } from 'lucide-react';
 import { useEffect, useState, useSyncExternalStore } from 'react';
 
 import { AssessmentRunner } from '@/components/assessment-runner';
+import { AuthGate } from '@/components/auth-gate';
 import { SiteHeader } from '@/components/site-header';
 import { Button } from '@/components/ui/button';
-import { getInvitationByCode, getResponses, updateInvitationRelationship } from '@/lib/storage';
+import { claimParentInvitation, getInvitationByCode, getResponses, isCloudPersistenceEnabled, updateInvitationRelationship } from '@/lib/storage';
 import { navigateTo } from '@/lib/navigation';
 import type { InvitationRecord } from '@/types/assessment';
 
@@ -23,7 +24,7 @@ function subscribeToHashChange(callback: () => void) {
   return () => window.removeEventListener('hashchange', callback);
 }
 
-export default function ObserverPage() {
+function ObserverExperience() {
   const code = useSyncExternalStore(subscribeToHashChange, getInvitationCode, () => '');
   const [invitation, setInvitation] = useState<InvitationRecord | null>();
   const [observerCompleted, setObserverCompleted] = useState<boolean | null>(null);
@@ -31,7 +32,9 @@ export default function ObserverPage() {
   const [started, setStarted] = useState(false);
 
   useEffect(() => {
-    const invitationRequest = code ? getInvitationByCode(code) : Promise.resolve(null);
+    const invitationRequest = code ? (isCloudPersistenceEnabled
+      ? claimParentInvitation(code).then((assessmentId) => ({ assessment_id: assessmentId, code, created_at: '' }))
+      : getInvitationByCode(code)) : Promise.resolve(null);
     invitationRequest
       .then(async (record) => {
         setInvitation(record);
@@ -69,4 +72,8 @@ export default function ObserverPage() {
       </section>
     </main>
   );
+}
+
+export default function ObserverPage() {
+  return isCloudPersistenceEnabled ? <AuthGate><ObserverExperience /></AuthGate> : <ObserverExperience />;
 }

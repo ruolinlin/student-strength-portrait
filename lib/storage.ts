@@ -8,16 +8,11 @@ import type {
 } from '@/types/assessment';
 import type { ProfessionalBriefRecord } from '@/types/professional';
 import { isTestModeEnabled, mockAnswers, requireTestMode, type TestPreset } from '@/lib/test-mode';
+import { currentUserId, supabaseAuth } from '@/lib/supabase-auth';
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL?.replace(/\/$/, '');
 const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 export const isCloudPersistenceEnabled = Boolean(supabaseUrl && supabaseKey) && !isTestModeEnabled;
-
-const headers = {
-  apikey: supabaseKey ?? '',
-  Authorization: `Bearer ${supabaseKey ?? ''}`,
-  'Content-Type': 'application/json',
-};
 
 interface LocalDatabase {
   assessments: AssessmentRecord[];
@@ -50,7 +45,8 @@ function writeLocal(database: LocalDatabase) {
 }
 
 async function rest<T>(path: string, init?: RequestInit): Promise<T> {
-  const requestHeaders = new Headers(headers);
+  const { data: { session } } = await supabaseAuth?.auth.getSession() ?? { data: { session: null } };
+  const requestHeaders = new Headers({ apikey: supabaseKey ?? '', Authorization: `Bearer ${session?.access_token ?? supabaseKey ?? ''}`, 'Content-Type': 'application/json' });
   if (init?.headers) {
     new Headers(init.headers).forEach((value, key) => requestHeaders.set(key, value));
   }
@@ -85,10 +81,12 @@ export async function createAssessment(input: {
     is_test: isTestModeEnabled,
   };
   if (isCloudPersistenceEnabled) {
+    const userId = await currentUserId();
+    if (!userId) throw new Error('Authentication required');
     const [created] = await rest<AssessmentRecord[]>('assessments', {
       method: 'POST',
       headers: { Prefer: 'return=representation' },
-      body: JSON.stringify(record),
+      body: JSON.stringify({ ...record, student_user_id: userId }),
     });
     await getOrCreateInvitation(created.id);
     return created;
@@ -158,18 +156,15 @@ export async function completeAssessmentRole(
       ? { status: 'awaiting_observer', self_completed_at: completedAt, student_status: 'completed' }
       : { status: 'complete', observer_completed_at: completedAt, parent_status: 'completed' };
   if (isCloudPersistenceEnabled) {
+    if (role === 'observer') {
+      await rest<void>('rpc/set_parent_assessment_status', { method: 'POST', body: JSON.stringify({ next_status: 'completed' }) });
+      return;
+    }
     await rest<void>(`assessments?id=eq.${encodeURIComponent(assessmentId)}`, {
       method: 'PATCH',
       headers: { Prefer: 'return=minimal' },
       body: JSON.stringify(patch),
     });
-    if (role === 'observer') {
-      await rest<void>(`invitations?assessment_id=eq.${encodeURIComponent(assessmentId)}`, {
-        method: 'PATCH',
-        headers: { Prefer: 'return=minimal' },
-        body: JSON.stringify({ completed_at: completedAt }),
-      });
-    }
     return;
   }
   const database = readLocal();
@@ -186,6 +181,10 @@ export async function markAssessmentStarted(assessmentId: string, role: Response
   const field = role === 'self' ? 'student_status' : 'parent_status';
   const patch = { [field]: 'in_progress' };
   if (isCloudPersistenceEnabled) {
+    if (role === 'observer') {
+      await rest<void>('rpc/set_parent_assessment_status', { method: 'POST', body: JSON.stringify({ next_status: 'in_progress' }) });
+      return;
+    }
     await rest<void>(`assessments?id=eq.${encodeURIComponent(assessmentId)}`, { method: 'PATCH', body: JSON.stringify(patch) });
     return;
   }
@@ -328,6 +327,20 @@ export async function getInvitationByCode(
     return records[0] ?? null;
   }
   return readLocal().invitations.find((record) => record.code === normalized) ?? null;
+}
+
+export async function claimParentInvitation(code: string): Promise<string> {
+  if (!isCloudPersistenceEnabled) {
+    const invitation = await getInvitationByCode(code);
+    if (!invitation) throw new Error('Invitation not found');
+    return invitation.assessment_id;
+  }
+  const [assessmentId] = await rest<string[]>('rpc/claim_parent_invitation', {
+    method: 'POST',
+    body: JSON.stringify({ invite_code: code }),
+  });
+  if (!assessmentId) throw new Error('Invitation could not be claimed');
+  return assessmentId;
 }
 
 export async function updateInvitationRelationship(

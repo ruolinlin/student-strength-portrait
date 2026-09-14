@@ -1,7 +1,9 @@
 'use client';
+/* oxlint-disable next/no-img-element -- QR data URLs are generated locally and not served as images. */
 
 import { ArrowRight, Check, Clipboard, FlaskConical, Link } from 'lucide-react';
 import { useCallback, useEffect, useState } from 'react';
+import QRCode from 'qrcode';
 
 import { Button } from '@/components/ui/button';
 import { getAssessment, getInvitationByAssessment, resetTestData, seedTestSession, setDevelopmentSessionState, type DevelopmentSessionState } from '@/lib/storage';
@@ -25,10 +27,16 @@ export function SessionStatus({ assessmentId, showDeveloperTools = false }: { as
   const [assessment, setAssessment] = useState<AssessmentRecord | null>();
   const [invitation, setInvitation] = useState<InvitationRecord | null>();
   const [message, setMessage] = useState('');
+  const [qrCode, setQrCode] = useState('');
   const refresh = useCallback(() => Promise.all([getAssessment(assessmentId), getInvitationByAssessment(assessmentId)])
     .then(([nextAssessment, nextInvitation]) => { setAssessment(nextAssessment); setInvitation(nextInvitation); }), [assessmentId]);
 
   useEffect(() => { void refresh(); }, [refresh]);
+  useEffect(() => {
+    if (!invitation?.code) return;
+    const url = `${window.location.origin}${appHref('/parent/invite')}#${invitation.code}`;
+    void QRCode.toDataURL(url, { width: 220, margin: 1 }).then(setQrCode);
+  }, [invitation?.code]);
 
   if (assessment === undefined) return <main className="assessment-loading"><span className="breathing-dot" /><p>正在准备测评会话</p></main>;
   if (!assessment) return <main className="soft-page"><section className="start-card"><h1>未找到这份测评。</h1><Button onClick={() => navigateTo('/')}>回到首页</Button></section></main>;
@@ -74,12 +82,13 @@ export function SessionStatus({ assessmentId, showDeveloperTools = false }: { as
         <section className="session-card session-card--parent" aria-labelledby="parent-status-title">
           <div className="session-card__heading"><div><h2 id="parent-status-title">家长测评</h2><span className={`status-pill status-pill--${parentStatus}`}>{parentStatus === 'completed' && <Check />}{statusCopy[parentStatus]}</span></div></div>
           {parentStatus === 'not_started' && <>
-            <p>邀请家长从 TA 的视角了解你的发展优势。</p>
+            <p>下一步：将邀请链接或二维码分享给家长，由家长在自己的设备上开始测评。</p>
             <div className="invitation-code"><span>邀请码</span><b>{invitation?.code ?? '正在生成'}</b></div>
             <div className="session-card__actions">
               <Button variant="outline" onClick={() => void copy(observerUrl, '邀请链接已复制')}><Link />复制邀请链接</Button>
               <Button variant="outline" onClick={() => void copy(invitation?.code ?? '', '邀请码已复制')}><Clipboard />复制邀请码</Button>
             </div>
+            {qrCode && <div className="invite-qr"><img src={qrCode} alt="家长邀请链接二维码" /><span>请让家长使用手机扫码打开</span></div>}
           </>}
           {parentStatus === 'in_progress' && <p>家长正在填写</p>}
           {parentStatus === 'completed' && <p>已完成 <Check aria-label="已完成" /></p>}
