@@ -14,8 +14,12 @@ export async function currentUserId() {
 
 export async function sendMagicLink(email: string) {
   if (!supabaseAuth) throw new Error('Supabase is not configured.');
-  const invite = window.location.hash.slice(1);
-  const redirect = `${window.location.origin}${window.location.pathname}${invite ? `?invite=${encodeURIComponent(invite)}` : ''}`;
+  const currentQuery = new URLSearchParams(window.location.search);
+  const invite = currentQuery.get('invite') || window.location.hash.slice(1);
+  const redirectQuery = new URLSearchParams();
+  if (invite) redirectQuery.set('invite', invite);
+  if (currentQuery.get('test') === 'true') redirectQuery.set('test', 'true');
+  const redirect = `${window.location.origin}${window.location.pathname}${redirectQuery.size ? `?${redirectQuery.toString()}` : ''}`;
   const { error } = await supabaseAuth.auth.signInWithOtp({ email, options: { emailRedirectTo: redirect } });
   if (error) throw error;
 }

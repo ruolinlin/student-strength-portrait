@@ -34,8 +34,9 @@ export function SessionStatus({ assessmentId, showDeveloperTools = false }: { as
   useEffect(() => { void refresh(); }, [refresh]);
   useEffect(() => {
     if (!invitation?.code) return;
-    const testQuery = new URLSearchParams(window.location.search).get('test') === 'true' ? '?test=true' : '';
-    const url = `${window.location.origin}${appHref(`/parent/invite${testQuery}`)}#${invitation.code}`;
+    const query = new URLSearchParams({ invite: invitation.code });
+    if (new URLSearchParams(window.location.search).get('test') === 'true') query.set('test', 'true');
+    const url = `${window.location.origin}${appHref(`/parent/invite?${query.toString()}`)}`;
     void QRCode.toDataURL(url, { width: 220, margin: 1 }).then(setQrCode);
   }, [invitation?.code]);
 
@@ -45,8 +46,9 @@ export function SessionStatus({ assessmentId, showDeveloperTools = false }: { as
   const studentStatus = statusOf(assessment.student_status);
   const parentStatus = statusOf(assessment.parent_status);
   const bothDone = studentStatus === 'completed' && parentStatus === 'completed';
-  const testQuery = new URLSearchParams(window.location.search).get('test') === 'true' ? '?test=true' : '';
-  const observerUrl = invitation ? `${window.location.origin}${appHref(`/parent/invite${testQuery}`)}#${invitation.code}` : '';
+  const invitationQuery = invitation ? new URLSearchParams({ invite: invitation.code }) : null;
+  if (invitationQuery && new URLSearchParams(window.location.search).get('test') === 'true') invitationQuery.set('test', 'true');
+  const observerUrl = invitationQuery ? `${window.location.origin}${appHref(`/parent/invite?${invitationQuery.toString()}`)}` : '';
   const copy = async (value: string, confirmation: string) => {
     if (!value) return;
     await navigator.clipboard.writeText(value);

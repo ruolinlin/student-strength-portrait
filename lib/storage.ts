@@ -335,10 +335,11 @@ export async function claimParentInvitation(code: string): Promise<string> {
     if (!invitation) throw new Error('Invitation not found');
     return invitation.assessment_id;
   }
-  const [assessmentId] = await rest<string[]>('rpc/claim_parent_invitation', {
+  const result = await rest<string | string[]>('rpc/claim_parent_invitation', {
     method: 'POST',
     body: JSON.stringify({ invite_code: code }),
   });
+  const assessmentId = Array.isArray(result) ? result[0] : result;
   if (!assessmentId) throw new Error('Invitation could not be claimed');
   return assessmentId;
 }
@@ -348,6 +349,15 @@ export async function updateInvitationRelationship(
   relationship: string,
 ): Promise<void> {
   if (isCloudPersistenceEnabled) {
+    const userId = await currentUserId();
+    const assessment = await getAssessment(assessmentId);
+    if (assessment?.parent_user_id === userId) {
+      await rest<void>('rpc/set_parent_relationship', {
+        method: 'POST',
+        body: JSON.stringify({ next_relationship: relationship }),
+      });
+      return;
+    }
     await rest<void>(`invitations?assessment_id=eq.${encodeURIComponent(assessmentId)}`, {
       method: 'PATCH',
       headers: { Prefer: 'return=minimal' },

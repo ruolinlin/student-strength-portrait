@@ -25,6 +25,8 @@ export interface AssessmentRecord {
   created_at: string;
   student_alias?: string | null;
   grade?: string | null;
+  student_user_id?: string | null;
+  parent_user_id?: string | null;
   status: 'self_in_progress' | 'awaiting_observer' | 'complete';
   self_completed_at?: string | null;
   observer_completed_at?: string | null;
