@@ -20,6 +20,10 @@ const { d1, r2 } = hostingConfig;
 
 // macOS Seatbelt blocks FSEvents, so Codex previews need polling for HMR.
 const isCodexSeatbeltSandbox = process.env.CODEX_SANDBOX === 'seatbelt';
+const githubRepositoryName = process.env.GITHUB_REPOSITORY?.split('/')[1];
+const githubBasePath = process.env.GITHUB_ACTIONS && githubRepositoryName
+  ? `/${githubRepositoryName}`
+  : '';
 
 const localBindingConfig = {
   main: 'vinext/server/fetch-handler',
@@ -54,9 +58,10 @@ export default defineConfig(async () => {
   const { cloudflare } = await import('@cloudflare/vite-plugin');
 
   return {
-    base: process.env.GITHUB_ACTIONS ? '/student-strength-portrait/' : '/',
+    base: githubBasePath ? `${githubBasePath}/` : '/',
     define: {
-      __APP_BASE_PATH__: JSON.stringify(process.env.GITHUB_ACTIONS ? '/student-strength-portrait' : ''),
+      __APP_BASE_PATH__: JSON.stringify(githubBasePath),
+      __PUBLIC_APP_BASE_PATH__: JSON.stringify(githubBasePath || '/student-strength-portrait'),
       __TEST_MODE_ENABLED__: JSON.stringify(process.env.ENABLE_TEST_MODE === 'true'),
     },
     css: { postcss: { plugins: [tailwindcss()] } },

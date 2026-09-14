@@ -1,8 +1,9 @@
 declare const __APP_BASE_PATH__: string;
+declare const __PUBLIC_APP_BASE_PATH__: string;
 
 const basePath = __APP_BASE_PATH__;
 const publicSiteOrigin = 'https://ruolinlin.github.io';
-const publicSiteBasePath = '/student-strength-portrait';
+const publicSiteBasePath = __PUBLIC_APP_BASE_PATH__;
 
 export function appHref(path = '/') {
   return `${basePath}${path.startsWith('/') ? path : `/${path}`}`;
