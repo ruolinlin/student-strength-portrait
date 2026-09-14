@@ -119,7 +119,7 @@ export function ResultsExperience({ assessmentId }: { assessmentId: string }) {
             </div>
           </section>
           <section className="portrait-reveal portrait-reveal--other">
-            <div className="portrait-reveal__copy"><span className="eyebrow">Portrait from Others</span><h2>这是你眼中的我。</h2><p>这幅画像来自长期相处中真实被看见的部分。它和自我画像一样重要，但并不替代自我画像。</p></div>
+            <div className="portrait-reveal__copy"><span className="eyebrow">Portrait from Others</span><h2>这是你观察到的 TA。</h2><p>这不是对 TA 的定论，而是你此刻基于长期观察形成的一幅画像：哪些事情会吸引 TA，TA 通常如何做事，以及什么对 TA 更重要。</p></div>
             <PortraitVisual self={observerProfile} />
           </section>
           <details className="details-drawer"><summary>看看 TA 眼中更细的线索 <ArrowRight /></summary><ProfileDetails profile={observerProfile} /></details>
